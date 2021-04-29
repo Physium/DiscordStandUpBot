@@ -16,7 +16,7 @@ description = 'A simple bot to serve a simple purpose for now.'
 activity = discord.Activity(type=discord.ActivityType.watching, name=f'over {TEAM}')
 
 intents = discord.Intents.all()
-client = commands.Bot(command_prefix='?', description=description, intents=intents, activity=activity, status=discord.Status.idle)
+client = commands.Bot(command_prefix='?', description=description, intents=intents, activity=activity)
 
 WHEN = time(3, 50, 0)
 

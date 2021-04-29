@@ -10,12 +10,13 @@ import random
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
-description = '''An example bot to showcase the discord.ext.commands extension
-module.
-There are a number of utility commands being showcased here.'''
+TEAM = os.getenv('DISCORD_TEAM', 'Nobody')
+
+description = 'A simple bot to serve a simple purpose for now.'
+activity = discord.Activity(type=discord.ActivityType.watching, name=f'over {TEAM}')
 
 intents = discord.Intents.all()
-client = commands.Bot(command_prefix='?', description=description, intents=intents)
+client = commands.Bot(command_prefix='?', description=description, intents=intents, activity=activity, status=discord.Status.idle)
 
 WHEN = time(3, 50, 0)
 

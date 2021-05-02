@@ -11,9 +11,13 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 TEAM = os.getenv('DISCORD_TEAM', 'Nobody')
+CHANNEL = os.getenv('DISCORD_CHANNEL')
+USER = os.getenv('DISCORD_USER')
+FILTER_MESSAGE = os.getenv('FILTER_MESSAGE')
 
 description = 'A simple bot to serve a simple purpose for now.'
 activity = discord.Activity(type=discord.ActivityType.watching, name=f'over {TEAM}')
+monitored_guild = None
 
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix='?', description=description, intents=intents, activity=activity)
@@ -30,26 +34,24 @@ async def on_ready():
     print(f'Part of the following Guilds:\n - {guilds_list}')
 
     for guild in guilds:
+        if guild.name == GUILD:
+            global monitored_guild
+            monitored_guild = guild
+
         print(f'{guild.name}(id: {guild.id})')
         members = '\n - '.join([member.name for member in guild.members])
         print(f'Guild Members:\n - {members}')
 
+    print(monitored_guild)
 
-async def retrieve_and_send_shuffle_list():
-    guild = discord.utils.get(client.guilds, name=GUILD)
 
-    print(guild.channels[0].channels[1].id)
-    print(guild.get_channel(834463800484429897))
-    stand_up_channel = guild.get_channel(834463800484429897)
+def shuffle_members(channel):
     members = []
-
-    for member in stand_up_channel.members:
+    for member in channel.members:
         members.append(member.mention)
 
     random.shuffle(members)
-
-    msg_members_mention_list = '\n - '.join([member for member in members])
-    await guild.channels[0].channels[1].send(f"Today's Stand Up Order:\n - {msg_members_mention_list}")
+    return members
 
 
 @client.command(description='Generate a shuffled list of members')
@@ -61,11 +63,7 @@ async def shuffle(ctx, channel: str):
     elif not se_channel.members:
         await ctx.send("Hey, there isnt anyone here for me to shuffle!")
     else:
-        members = []
-        for member in se_channel.members:
-            members.append(member.mention)
-
-        random.shuffle(members)
+        members = shuffle_members(se_channel)
         msg_members_mention_list = '\n - '.join([member for member in members])
         await ctx.send(f"Today's Stand Up Order:\n - {msg_members_mention_list}")
 
@@ -82,7 +80,6 @@ async def my_background_task(ctx):
     guild = discord.utils.get(client.guilds, name=GUILD)
     channel = guild.channels[0].channels[1]
     await channel.send(ctx.message.content)
-    # await retrieve_and_send_shuffle_list()
 
 
 @my_background_task.before_loop
@@ -96,16 +93,28 @@ async def before_my_task():
     await asyncio.sleep(seconds_till_target)
 
 
+async def carl_bot_message_filter(message):
+    message_filter = FILTER_MESSAGE
+    if message.guild == monitored_guild and message.author.name == USER and message.channel.name == CHANNEL:
+        if message.content.endswith(message_filter):
+            await message.channel.send(f'Thank you {message.author.mention} for the reminder!'
+                                       f' Gather up, {message.role_mentions[0].mention}! '
+                                       f'I will start shuffling in 60 seconds!')
+            await asyncio.sleep(60)
+
+            members = shuffle_members(message.channel)
+            msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
+            await message.channel.send(f"Today's Stand Up Order:\n {msg_members_mention_list}")
+
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello!')
+    await carl_bot_message_filter(message)
 
     print(message.content)
     await client.process_commands(message)
 
-# my_background_task.start()
 client.run(TOKEN)

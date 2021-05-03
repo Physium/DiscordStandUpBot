@@ -13,6 +13,7 @@ GUILD = os.getenv('DISCORD_GUILD')
 TEAM = os.getenv('DISCORD_TEAM', 'Nobody')
 CHANNEL = os.getenv('DISCORD_CHANNEL')
 USER = os.getenv('DISCORD_USER')
+VOICE_CHANNEL = os.getenv('DISCORD_VOICECHANNEL')
 FILTER_MESSAGE = os.getenv('FILTER_MESSAGE')
 
 description = 'A simple bot to serve a simple purpose for now.'
@@ -64,33 +65,34 @@ async def shuffle(ctx, channel: str):
         await ctx.send("Hey, there isnt anyone here for me to shuffle!")
     else:
         members = shuffle_members(se_channel)
-        msg_members_mention_list = '\n - '.join([member for member in members])
-        await ctx.send(f"Today's Stand Up Order:\n - {msg_members_mention_list}")
+        msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
+        await ctx.send(f"Today's Stand Up Order:\n {msg_members_mention_list}")
 
 
-@client.command(description='set daily reminders')
-async def notification(ctx):
-    await my_background_task.start(ctx)
+# @client.command(description='set daily reminders')
+# async def notification(ctx):
+#     client.loop.create_task(my_background_task(ctx))
+#     await my_background_task.start(ctx)
 
 
-@tasks.loop(seconds=60)
-async def my_background_task(ctx):
-    print('hello world running task')
-    print(ctx.guild.name)
-    guild = discord.utils.get(client.guilds, name=GUILD)
-    channel = guild.channels[0].channels[1]
-    await channel.send(ctx.message.content)
+# @tasks.loop(seconds=60)
+# async def my_background_task(ctx):
+#     print('hello world running task')
+#     print(ctx.guild.name)
+#     guild = discord.utils.get(client.guilds, name=GUILD)
+#     # channel = guild.channels[0].channels[1]
+#     await ctx.send(ctx.message.content)
 
 
-@my_background_task.before_loop
-async def before_my_task():
-    await client.wait_until_ready()
-
-    now = datetime.now()
-    target_time = datetime.combine(now.date(), WHEN)
-    seconds_till_target = (target_time - now).total_seconds()
-    print("counting down %s" % seconds_till_target)
-    await asyncio.sleep(seconds_till_target)
+# @my_background_task.before_loop
+# async def before_my_task():
+#     await client.wait_until_ready()
+#
+#     now = datetime.now()
+#     target_time = datetime.combine(now.date(), WHEN)
+#     seconds_till_target = (target_time - now).total_seconds()
+#     print("counting down %s" % seconds_till_target)
+#     await asyncio.sleep(seconds_till_target)
 
 
 async def carl_bot_message_filter(message):
@@ -101,8 +103,8 @@ async def carl_bot_message_filter(message):
                                        f' Gather up, {message.role_mentions[0].mention}! '
                                        f'I will start shuffling in 60 seconds!')
             await asyncio.sleep(60)
-
-            members = shuffle_members(message.channel)
+            voice_channel = discord.utils.get(message.guild.channels, name=VOICE_CHANNEL)
+            members = shuffle_members(voice_channel)
             msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
             await message.channel.send(f"Today's Stand Up Order:\n {msg_members_mention_list}")
 

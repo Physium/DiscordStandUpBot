@@ -102,7 +102,7 @@ async def carl_bot_message_filter(message):
             await message.channel.send(f'Thank you {message.author.mention} for the reminder!'
                                        f' Gather up, {message.role_mentions[0].mention}! '
                                        f'I will start shuffling in 60 seconds!')
-            await asyncio.sleep(60)
+            await asyncio.sleep(45)
             voice_channel = discord.utils.get(message.guild.channels, name=VOICE_CHANNEL)
             members = shuffle_members(voice_channel)
             msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])

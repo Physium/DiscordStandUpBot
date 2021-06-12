@@ -6,15 +6,17 @@ from dotenv import load_dotenv
 from datetime import datetime, time, timedelta
 import asyncio
 import random
+import json
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 TEAM = os.getenv('DISCORD_TEAM', 'Nobody')
-CHANNEL = os.getenv('DISCORD_CHANNEL')
 USER = os.getenv('DISCORD_USER')
-VOICE_CHANNEL = os.getenv('DISCORD_VOICECHANNEL')
 FILTER_MESSAGE = os.getenv('FILTER_MESSAGE')
+CHANNELS = os.getenv('DISCORD_CHANNELS')
+
+channels_json = json.loads(CHANNELS)
 
 description = 'A simple bot to serve a simple purpose for now.'
 activity = discord.Activity(type=discord.ActivityType.watching, name=f'over {TEAM}')
@@ -35,7 +37,7 @@ async def on_ready():
     print(f'Part of the following Guilds:\n - {guilds_list}')
 
     for guild in guilds:
-        if guild.name == GUILD:
+        if guild.id == int(GUILD):
             global monitored_guild
             monitored_guild = guild
 
@@ -44,6 +46,14 @@ async def on_ready():
         print(f'Guild Members:\n - {members}')
 
     print(monitored_guild)
+
+
+def check_channel(channel_id):
+    try:
+        channels_json[channel_id]
+        return True
+    except KeyError:
+        return False
 
 
 def shuffle_members(channel):
@@ -96,17 +106,29 @@ async def shuffle(ctx, channel: str):
 
 
 async def carl_bot_message_filter(message):
-    message_filter = FILTER_MESSAGE
-    if message.guild == monitored_guild and message.author.name == USER and message.channel.name == CHANNEL:
-        if message.content.endswith(message_filter):
+    if message.guild == monitored_guild and message.author.name == USER and check_channel(str(message.channel.id)):
+        if FILTER_MESSAGE in message.content:
+            if message.role_mentions:
+                mention = ' ' + message.role_mentions[0].mention + '!'
+            elif not message.role_mentions:
+                mention = '!'
+            countdown = channels_json[str(message.channel.id)]['shuffle_countdown']
             await message.channel.send(f'Thank you {message.author.mention} for the reminder!'
-                                       f' Gather up, {message.role_mentions[0].mention}! '
-                                       f'I will start shuffling in 60 seconds!')
-            await asyncio.sleep(45)
-            voice_channel = discord.utils.get(message.guild.channels, name=VOICE_CHANNEL)
+                                       f' Gather up{mention} '
+                                       f"I will start shuffling in {countdown} seconds!")
+
+            await asyncio.sleep(countdown)
+            voice_channel = discord.utils.get(
+                message.guild.channels,
+                id=channels_json[str(message.channel.id)]['voice_id']
+            )
             members = shuffle_members(voice_channel)
-            msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
-            await message.channel.send(f"Today's Stand Up Order:\n {msg_members_mention_list}")
+
+            if members:
+                msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
+                await message.channel.send(f"Today's Stand Up Order:\n {msg_members_mention_list}")
+            elif not members:
+                await message.channel.send("Hey, there is no one here!")
 
 
 @client.event

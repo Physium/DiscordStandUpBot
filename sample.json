@@ -1,0 +1,10 @@
+{
+  "sample_channel_id": {
+    "voice_id": 54321,
+    "shuffle_countdown": 45
+  },
+  "sample_channel_id": {
+    "voice_id": 12345,
+    "shuffle_countdown": 120
+  }
+}

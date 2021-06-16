@@ -3,7 +3,7 @@ import os
 from discord.ext import tasks, commands
 import discord
 from dotenv import load_dotenv
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, date
 import asyncio
 import random
 import json
@@ -59,7 +59,8 @@ def check_channel(channel_id):
 def shuffle_members(channel):
     members = []
     for member in channel.members:
-        members.append(member.mention)
+        if not member.bot: # Ignore bots in voice channels
+            members.append(member.mention)
 
     random.shuffle(members)
     return members
@@ -126,7 +127,7 @@ async def carl_bot_message_filter(message):
 
             if members:
                 msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
-                await message.channel.send(f"Today's Stand Up Order:\n {msg_members_mention_list}")
+                await message.channel.send(f"Today's date is {date.today().strftime('%B %d, %Y')}!\n Stand Up Order:\n {msg_members_mention_list}")
             elif not members:
                 await message.channel.send("Hey, there is no one here!")
 

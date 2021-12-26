@@ -107,7 +107,9 @@ async def shuffle(ctx, channel: str):
 
 
 async def carl_bot_message_filter(message):
-    if message.guild == monitored_guild and message.author.name == USER and check_channel(str(message.channel.id)):
+    channel_id_str = str(message.channel.id)
+
+    if message.guild == monitored_guild and message.author.name == USER and check_channel(channel_id_str):
         if FILTER_MESSAGE in message.content:
             if message.role_mentions:
                 mention = ' ' + message.role_mentions[0].mention + '!'
@@ -121,16 +123,25 @@ async def carl_bot_message_filter(message):
             await asyncio.sleep(countdown)
             voice_channel = discord.utils.get(
                 message.guild.channels,
-                id=channels_json[str(message.channel.id)]['voice_id']
+                id=channels_json[channel_id_str]['voice_id']
             )
             members = shuffle_members(voice_channel)
 
+            text = ''
             if members:
                 msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
-                await message.channel.send(f"Today's date is {date.today().strftime('%B %d, %Y')}!\n Stand Up Order:\n {msg_members_mention_list}")
+                text = f"Today's date is {date.today().strftime('%B %d, %Y')}!"\
+                       f"\n Stand Up Order:"\
+                       f"\n {msg_members_mention_list}"
             elif not members:
-                await message.channel.send("Hey, there is no one here!")
+                text = "Hey, there is no one here!"
 
+            if channels_json[channel_id_str].get('incident_date') is not None:
+                incident_date = datetime.strptime(channels_json[channel_id_str]['incident_date'], "%d/%m/%Y")
+                date_delta = datetime.today() - incident_date
+                text += f"\n Its been {date_delta.days} since last incident on {incident_date.strftime('%B %d, %Y')}"
+
+            await message.channel.send(text)
 
 @client.event
 async def on_message(message):

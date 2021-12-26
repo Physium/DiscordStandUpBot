@@ -80,6 +80,32 @@ async def shuffle(ctx, channel: str):
         await ctx.send(f"Today's Stand Up Order:\n {msg_members_mention_list}")
 
 
+@client.command(description='Day(s) since last incident')
+async def incident(ctx, input_date: str = ""):
+    channel_id = str(ctx.channel.id)
+
+    try:
+        if check_channel(channel_id):
+            text = ""
+            if input_date != "":
+                incident_date = datetime.strptime(input_date, '%d/%m/%Y')
+                channels_json[channel_id]['incident_date'] = incident_date.strftime('%d/%m/%Y')
+                text += "Added New Incident Date! "
+
+            if channels_json[channel_id].get('incident_date') is None:
+                raise Exception("No incidents set!")
+
+            delta_days = datetime.today() - datetime.strptime(channels_json[channel_id]['incident_date'], "%d/%m/%Y")
+            if delta_days.days < 0:
+                raise Exception("You living in the future or what?")
+
+            text += f"Its been {delta_days.days} days since last incident"
+            await ctx.send(text)
+    except ValueError:
+        await ctx.send(f"Incorrect date format, use DD/MM/YYYY")
+    except BaseException as err:
+        await ctx.send(err)
+
 # @client.command(description='set daily reminders')
 # async def notification(ctx):
 #     client.loop.create_task(my_background_task(ctx))

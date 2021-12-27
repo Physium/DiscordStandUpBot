@@ -165,7 +165,7 @@ async def carl_bot_message_filter(message):
             if channels_json[channel_id_str].get('incident_date') is not None:
                 incident_date = datetime.strptime(channels_json[channel_id_str]['incident_date'], "%d/%m/%Y")
                 date_delta = datetime.today() - incident_date
-                text += f"\n Its been {date_delta.days} since last incident on {incident_date.strftime('%B %d, %Y')}"
+                text += f"\n Its been {date_delta.days} day(s) since last incident on {incident_date.strftime('%B %d, %Y')}"
 
             await message.channel.send(text)
 

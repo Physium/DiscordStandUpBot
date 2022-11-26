@@ -45,8 +45,6 @@ async def on_ready():
         members = '\n - '.join([member.name for member in guild.members])
         print(f'Guild Members:\n - {members}')
 
-    print(monitored_guild)
-
 
 def check_channel(channel_id):
     try:
@@ -59,7 +57,7 @@ def check_channel(channel_id):
 def shuffle_members(channel):
     members = []
     for member in channel.members:
-        if not member.bot: # Ignore bots in voice channels
+        if not member.bot:  # Ignore bots in voice channels
             members.append(member.mention)
 
     random.shuffle(members)
@@ -105,6 +103,7 @@ async def incident(ctx, input_date: str = ""):
         await ctx.send(f"Incorrect date format, use DD/MM/YYYY")
     except BaseException as err:
         await ctx.send(err)
+
 
 # @client.command(description='set daily reminders')
 # async def notification(ctx):
@@ -156,8 +155,9 @@ async def carl_bot_message_filter(message):
                 members = shuffle_members(voice_channel)
                 text += f"\nStand Up Order for {voice_channel.mention}:"
                 if members:
-                    msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
-                    text += f"\n{msg_members_mention_list}"
+                    msg_members_mention_list = '\n '.join(
+                        [f'{i}) {member}' for i, member in enumerate(members, start=1)])
+                    text += f"\n {msg_members_mention_list}"
                 elif not members:
                     text += f"\n - What am I shuffling when there is no one here?!"
 
@@ -168,14 +168,14 @@ async def carl_bot_message_filter(message):
 
             await message.channel.send(text)
 
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
 
     await carl_bot_message_filter(message)
-
-    print(message.content)
     await client.process_commands(message)
+
 
 client.run(TOKEN)

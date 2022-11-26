@@ -131,7 +131,6 @@ async def incident(ctx, input_date: str = ""):
 #     print("counting down %s" % seconds_till_target)
 #     await asyncio.sleep(seconds_till_target)
 
-
 async def carl_bot_message_filter(message):
     channel_id_str = str(message.channel.id)
 
@@ -145,22 +144,22 @@ async def carl_bot_message_filter(message):
             await message.channel.send(f'Thank you {message.author.mention} for the reminder!'
                                        f' Gather up{mention} '
                                        f"I will start shuffling in {countdown} seconds!")
-
             await asyncio.sleep(countdown)
-            voice_channel = discord.utils.get(
-                message.guild.channels,
-                id=channels_json[channel_id_str]['voice_id']
-            )
-            members = shuffle_members(voice_channel)
 
-            text = ''
-            if members:
-                msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
-                text = f"Today's date is {date.today().strftime('%B %d, %Y')}!"\
-                       f"\n Stand Up Order:"\
-                       f"\n {msg_members_mention_list}"
-            elif not members:
-                text = "Hey, there is no one here!"
+            voice_ids = channels_json[channel_id_str]['voice_ids']
+            text = f"{date.today().strftime('%B %d, %Y')} Shuffle Order(s)!"
+            for voice_id in voice_ids:
+                voice_channel = discord.utils.get(
+                    message.guild.channels,
+                    id=voice_id
+                )
+                members = shuffle_members(voice_channel)
+                text += f"\nStand Up Order for {voice_channel.mention}:"
+                if members:
+                    msg_members_mention_list = '\n '.join([f'{i}) {member}' for i, member in enumerate(members, start=1)])
+                    text += f"\n{msg_members_mention_list}"
+                elif not members:
+                    text += f"\n - What am I shuffling when there is no one here?!"
 
             if channels_json[channel_id_str].get('incident_date') is not None:
                 incident_date = datetime.strptime(channels_json[channel_id_str]['incident_date'], "%d/%m/%Y")

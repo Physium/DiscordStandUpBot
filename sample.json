@@ -1,11 +1,11 @@
 {
   "sample_channel_id": {
-    "voice_id": 54321,
+    "voice_ids": [voice_channel_id1, voice_channel_id1],
     "shuffle_countdown": 45,
     "incident_date": "12/12/2021"
   },
   "sample_channel_id": {
-    "voice_id": 12345,
+    "voice_ids": [voice_channel_id3],
     "shuffle_countdown": 120
   }
 }
